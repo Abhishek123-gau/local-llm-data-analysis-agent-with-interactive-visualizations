@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+*.env
+.env
+
+# Node & Frontend
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Datasets / Uploads temporary files
+backend/uploads/
+*.duckdb
+*.db
+
+# Logs & IDE
+*.log
+.vscode/
+.idea/
+.DS_Store

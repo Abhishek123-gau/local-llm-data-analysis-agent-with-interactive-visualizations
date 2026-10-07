@@ -1,0 +1,21 @@
+Order_ID,Order_Date,Region,Sales_Rep,Customer_Segment,Product_Category,Product_Name,Units_Sold,Unit_Price,Discount_Rate,Total_Revenue,Profit
+1001,2024-01-05,North,Sarah Jenkins,Enterprise,Software,Cloud Analytics Pro,12,499.00,0.10,5389.20,3200.50
+1002,2024-01-08,West,Michael Chang,SMB,Hardware,Enterprise Server X1,2,3500.00,0.05,6650.00,2100.00
+1003,2024-01-12,East,Emily Watson,Consumer,Peripherals,4K Ultra Monitor,15,350.00,0.15,4462.50,1350.00
+1004,2024-01-15,South,David Miller,Enterprise,Services,Annual Support SLA,1,12000.00,0.00,12000.00,7500.00
+1005,2024-01-19,North,Sarah Jenkins,SMB,Software,DevOps Suite,8,850.00,0.10,6120.00,3800.00
+1006,2024-01-22,West,Michael Chang,Enterprise,Hardware,Network Switch 48P,5,1200.00,0.08,5520.00,2200.00
+1007,2024-01-28,East,Emily Watson,Consumer,Peripherals,Ergonomic Mech Keyboard,45,120.00,0.05,5130.00,2100.00
+1008,2024-02-02,South,David Miller,SMB,Software,Cloud Analytics Pro,6,499.00,0.05,2844.30,1750.00
+1009,2024-02-05,North,Sarah Jenkins,Enterprise,Hardware,Enterprise Server X1,4,3500.00,0.12,12320.00,4100.00
+1010,2024-02-10,West,Michael Chang,Consumer,Peripherals,Noise Cancel Headset,30,180.00,0.10,4860.00,1950.00
+1011,2024-02-14,East,Emily Watson,Enterprise,Services,Custom Migration,2,6500.00,0.00,13000.00,8200.00
+1012,2024-02-18,South,David Miller,SMB,Software,DevOps Suite,5,850.00,0.05,4037.50,2500.00
+1013,2024-02-23,North,Sarah Jenkins,Consumer,Peripherals,4K Ultra Monitor,8,350.00,0.10,2520.00,800.00
+1014,2024-02-27,West,Michael Chang,Enterprise,Software,DevOps Suite,14,850.00,0.15,10115.00,6200.00
+1015,2024-03-03,East,Emily Watson,SMB,Hardware,Network Switch 48P,3,1200.00,0.05,3420.00,1400.00
+1016,2024-03-08,South,David Miller,Enterprise,Services,Annual Support SLA,1,12000.00,0.10,10800.00,6800.00
+1017,2024-03-12,North,Sarah Jenkins,SMB,Peripherals,Noise Cancel Headset,25,180.00,0.08,4140.00,1700.00
+1018,2024-03-17,West,Michael Chang,Enterprise,Hardware,Enterprise Server X1,3,3500.00,0.10,9450.00,3200.00
+1019,2024-03-22,East,Emily Watson,Consumer,Software,Cloud Analytics Pro,4,499.00,0.00,1996.00,1200.00
+1020,2024-03-28,South,David Miller,SMB,Hardware,Network Switch 48P,4,1200.00,0.10,4320.00,1800.00
