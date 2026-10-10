@@ -99,5 +99,33 @@ export const api = {
       throw new Error(err.detail || 'SQL query failed');
     }
     return res.json();
+  },
+
+  async runAutoAnalyze(datasetId, prompt, settings = {}) {
+    const res = await fetch(`${BASE_URL}/api/auto-analyze/run`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        dataset_id: datasetId,
+        prompt,
+        provider: settings.provider || 'ollama',
+        model_name: settings.modelName || undefined,
+        ollama_url: settings.ollamaUrl || undefined,
+        api_key: settings.apiKey || undefined,
+      }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: 'AutoAnalyze failed' }));
+      throw new Error(err.detail || 'AutoAnalyze execution failed');
+    }
+    return res.json();
+  },
+
+  getModelDownloadUrl(taskId) {
+    return `${BASE_URL}/api/auto-analyze/${taskId}/download-model`;
+  },
+
+  getScriptDownloadUrl(taskId) {
+    return `${BASE_URL}/api/auto-analyze/${taskId}/download-script`;
   }
 };

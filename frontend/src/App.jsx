@@ -8,18 +8,20 @@ import {
   Database,
   Layers,
   HelpCircle,
+  BrainCircuit,
 } from 'lucide-react';
 import Header from './components/Header';
 import FileUpload from './components/FileUpload';
 import DatasetOverview from './components/DatasetOverview';
 import DataTable from './components/DataTable';
 import ChatInterface from './components/ChatInterface';
+import AutoAnalyzeTab from './components/AutoAnalyzeTab';
 import SettingsModal from './components/SettingsModal';
 import { api } from './services/api';
 
 export default function App() {
   const [dataset, setDataset] = useState(null);
-  const [activeTab, setActiveTab] = useState('chat'); // 'chat' | 'overview' | 'table'
+  const [activeTab, setActiveTab] = useState('chat'); // 'chat' | 'overview' | 'table' | 'automl'
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [llmHealth, setLlmHealth] = useState(null);
   const [pendingQuestion, setPendingQuestion] = useState(null);
@@ -99,7 +101,7 @@ export default function App() {
             {/* Top Navigation & Dataset Switcher Bar */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-3 rounded-2xl glass-panel border border-slate-800">
               {/* Tab Switcher */}
-              <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-900/80 border border-slate-800 w-full sm:w-auto">
+              <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-xl bg-slate-900/80 border border-slate-800 w-full sm:w-auto">
                 <button
                   onClick={() => setActiveTab('chat')}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
@@ -134,6 +136,18 @@ export default function App() {
                 >
                   <TableIcon className="w-3.5 h-3.5" />
                   <span>Working Data Table</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('automl')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
+                    activeTab === 'automl'
+                      ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md shadow-indigo-600/30 font-bold'
+                      : 'text-indigo-400 hover:text-indigo-300'
+                  }`}
+                >
+                  <BrainCircuit className="w-3.5 h-3.5" />
+                  <span>Auto-ML Multi-Agent</span>
                 </button>
               </div>
 
@@ -172,6 +186,13 @@ export default function App() {
                   data={dataset.preview_rows}
                   columns={dataset.columns}
                   title={`Working Dataset Preview (${dataset.filename})`}
+                />
+              </div>
+
+              <div className={activeTab === 'automl' ? 'block' : 'hidden'}>
+                <AutoAnalyzeTab
+                  dataset={dataset}
+                  llmSettings={llmSettings}
                 />
               </div>
             </div>

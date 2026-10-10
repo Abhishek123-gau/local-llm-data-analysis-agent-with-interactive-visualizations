@@ -2,16 +2,18 @@ import uuid
 import shutil
 from pathlib import Path
 from typing import List, Dict, Any, Optional
+from pydantic import BaseModel
 
 from fastapi import FastAPI, UploadFile, File, HTTPException, Query, Body, Response
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, PlainTextResponse
+from fastapi.responses import JSONResponse, PlainTextResponse, FileResponse
 
 from .config import UPLOAD_DIR, DEFAULT_PROVIDER, OLLAMA_BASE_URL, DEFAULT_OLLAMA_MODEL
 from .database import db_manager
 from .data_profiler import DataProfiler
 from .llm_client import LLMClient
 from .agent import CSVSQLAgent
+from .auto_analyzer.orchestrator import AutoAnalyzeOrchestrator, ARTIFACTS_DIR
 from .models import (
     DatasetSummary,
     QueryRequest,
@@ -19,6 +21,14 @@ from .models import (
     CustomSQLRequest,
     LLMConfigRequest,
 )
+
+class AutoAnalyzeRequest(BaseModel):
+    dataset_id: str
+    prompt: str
+    provider: Optional[str] = "ollama"
+    model_name: Optional[str] = None
+    ollama_url: Optional[str] = None
+    api_key: Optional[str] = None
 
 app = FastAPI(
     title="CSV Analysis Agent API",
@@ -105,17 +115,14 @@ async def upload_csv(file: UploadFile = File(...)):
     clean_filename = Path(file.filename).name
     file_path = UPLOAD_DIR / f"{dataset_id}_{clean_filename}"
 
-    # Save uploaded file
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
     try:
-        # Profile and register in DuckDB
         profile = DataProfiler.profile_csv(dataset_id, file_path)
         DATASETS_STORE[dataset_id] = profile
         return profile
     except Exception as e:
-        # Clean up if failed
         if file_path.exists():
             file_path.unlink()
         raise HTTPException(status_code=500, detail=f"Failed to process CSV: {str(e)}")
@@ -227,3 +234,60 @@ def execute_custom_sql(request: CustomSQLRequest):
         }
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"SQL Execution Error: {str(e)}")
+
+# ==============================================================================
+# AUTO-ANALYZE & MULTI-AGENT MACHINE LEARNING PIPELINE ENDPOINTS
+# ==============================================================================
+
+@app.post("/api/auto-analyze/run")
+async def run_auto_analyze(request: AutoAnalyzeRequest):
+    """Executes the full multi-agent autonomous problem formulation, data diagnostic, remediation, and modeling pipeline."""
+    dataset = get_or_restore_dataset(request.dataset_id)
+    if not dataset:
+        raise HTTPException(status_code=404, detail=f"Dataset '{request.dataset_id}' not found.")
+
+    client = LLMClient(
+        provider=request.provider or DEFAULT_PROVIDER,
+        model_name=request.model_name,
+        ollama_url=request.ollama_url,
+        api_key=request.api_key,
+    )
+
+    orchestrator = AutoAnalyzeOrchestrator(client)
+    try:
+        report = await orchestrator.run_pipeline(request.dataset_id, request.prompt)
+        return report
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"AutoAnalyze Pipeline Execution Failed: {str(e)}")
+
+@app.get("/api/auto-analyze/{task_id}/download-model")
+def download_champion_model(task_id: str):
+    """Downloads the trained champion .joblib model pipeline."""
+    task_dir = ARTIFACTS_DIR / task_id
+    if not task_dir.exists():
+        raise HTTPException(status_code=404, detail=f"Task '{task_id}' artifacts not found.")
+
+    joblib_files = list(task_dir.glob("champion_*.joblib"))
+    if not joblib_files:
+        raise HTTPException(status_code=404, detail="Champion model file not found.")
+
+    model_file = joblib_files[0]
+    return FileResponse(
+        path=str(model_file),
+        filename=model_file.name,
+        media_type="application/octet-stream"
+    )
+
+@app.get("/api/auto-analyze/{task_id}/download-script")
+def download_training_script(task_id: str):
+    """Downloads the standalone reproducible Python training script."""
+    task_dir = ARTIFACTS_DIR / task_id
+    script_file = task_dir / "reproducible_train_pipeline.py"
+    if not script_file.exists():
+        raise HTTPException(status_code=404, detail="Training script not found.")
+
+    return FileResponse(
+        path=str(script_file),
+        filename="train_pipeline.py",
+        media_type="text/x-python"
+    )
