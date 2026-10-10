@@ -60,6 +60,31 @@ export const api = {
     return res.json();
   },
 
+  async resetDataset(datasetId) {
+    const res = await fetch(`${BASE_URL}/api/datasets/${datasetId}/reset`, {
+      method: 'POST',
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: 'Failed to reset dataset' }));
+      throw new Error(err.detail || 'Failed to reset dataset');
+    }
+    return res.json();
+  },
+
+  getExportUrl(datasetId, format = 'csv') {
+    return `${BASE_URL}/api/datasets/${datasetId}/export?format=${format}`;
+  },
+
+  async downloadExport(datasetId, format = 'csv', filename = 'dataset') {
+    const url = this.getExportUrl(datasetId, format);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `${filename}_transformed.${format}`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  },
+
   async runCustomSQL(datasetId, sqlQuery) {
     const res = await fetch(`${BASE_URL}/api/sql`, {
       method: 'POST',

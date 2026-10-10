@@ -1,11 +1,11 @@
 import pandas as pd
 import numpy as np
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from .database import db_manager
 
 class DataProfiler:
-    """Profiles CSV datasets and generates statistical metadata and recommended questions."""
+    """Profiles CSV datasets and generates statistical metadata, history, and recommended questions."""
 
     @staticmethod
     def profile_csv(dataset_id: str, file_path: Path) -> Dict[str, Any]:
@@ -13,9 +13,18 @@ class DataProfiler:
         if not meta:
             meta = db_manager.register_csv(dataset_id, file_path)
             
+        return DataProfiler.profile_dataset(dataset_id, filename=file_path.name)
+
+    @staticmethod
+    def profile_dataset(dataset_id: str, filename: Optional[str] = None) -> Dict[str, Any]:
+        """Profiles the active DuckDB working table for dataset_id."""
+        meta = db_manager.get_table_meta(dataset_id)
+        if not meta:
+            raise ValueError(f"Dataset {dataset_id} not found")
+        
         table_name = meta["table_name"]
         
-        # Load sample/full dataframe for quick statistics
+        # Load working dataframe for statistics
         df = db_manager.con.sql(f"SELECT * FROM {table_name}").df()
         
         total_rows = len(df)
@@ -44,12 +53,17 @@ class DataProfiler:
         # Generate intelligent suggestions based on detected columns
         suggested_questions = DataProfiler._generate_suggested_questions(df)
 
+        actual_filename = filename or Path(meta.get("file_path", "dataset.csv")).name
+
         return {
             "dataset_id": dataset_id,
-            "filename": file_path.name,
+            "filename": actual_filename,
             "table_name": table_name,
             "total_rows": total_rows,
             "total_columns": total_columns,
+            "original_rows": meta.get("original_rows", total_rows),
+            "original_columns": meta.get("original_columns", total_columns),
+            "history": meta.get("history", []),
             "columns": list(df.columns),
             "column_types": meta["column_types"],
             "preview_rows": preview_rows,
@@ -69,7 +83,7 @@ class DataProfiler:
         # Question 1: Total records & overall overview
         questions.append("What is the total number of records and what are the main summary metrics?")
 
-        # Question 2: Grouping by categorical column with highest cardinality < 20
+        # Question 2: Grouping by categorical column
         if cat_cols and num_cols:
             c = cat_cols[0]
             n = num_cols[0]

@@ -22,6 +22,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('chat'); // 'chat' | 'overview' | 'table'
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [llmHealth, setLlmHealth] = useState(null);
+  const [pendingQuestion, setPendingQuestion] = useState(null);
   
   const [llmSettings, setLlmSettings] = useState(() => {
     const saved = localStorage.getItem('csv_agent_settings');
@@ -54,7 +55,14 @@ export default function App() {
     setActiveTab('chat');
   };
 
+  const handleDatasetUpdated = (updatedDataset) => {
+    if (updatedDataset) {
+      setDataset(updatedDataset);
+    }
+  };
+
   const handleSelectSuggestedQuestion = (question) => {
+    setPendingQuestion(question);
     setActiveTab('chat');
   };
 
@@ -65,6 +73,7 @@ export default function App() {
         llmHealth={llmHealth}
         onOpenSettings={() => setIsSettingsOpen(true)}
         onRefreshHealth={checkHealth}
+        onDatasetUpdated={handleDatasetUpdated}
       />
 
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
@@ -73,13 +82,13 @@ export default function App() {
             <div className="text-center space-y-3 max-w-2xl mx-auto">
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-semibold">
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>Text-to-SQL Multi-Step Autonomous Analytics</span>
+                <span>Text-to-SQL & Autonomous Feature Engineering Engine</span>
               </div>
               <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
                 Turn any CSV into an Intelligent Analytical Agent
               </h2>
               <p className="text-sm text-slate-400 leading-relaxed">
-                Upload any CSV dataset to query in natural language. Powered by DuckDB high-performance SQL engine with autonomous self-correcting query synthesis and automatic charting.
+                Upload any CSV dataset to analyze, engineer features, filter data, and query in natural language. Powered by DuckDB high-performance SQL engine with memory snapshots and live data exports.
               </p>
             </div>
 
@@ -100,7 +109,7 @@ export default function App() {
                   }`}
                 >
                   <MessageSquare className="w-3.5 h-3.5" />
-                  <span>Agent Chat</span>
+                  <span>Agent Chat & Transformations</span>
                 </button>
 
                 <button
@@ -124,7 +133,7 @@ export default function App() {
                   }`}
                 >
                   <TableIcon className="w-3.5 h-3.5" />
-                  <span>Data Table Preview</span>
+                  <span>Working Data Table</span>
                 </button>
               </div>
 
@@ -138,26 +147,33 @@ export default function App() {
               </button>
             </div>
 
-            {/* Active Tab View */}
+            {/* Persistent Tab Views - kept in DOM so history & state never reset */}
             <div>
-              {activeTab === 'chat' && (
-                <ChatInterface dataset={dataset} llmSettings={llmSettings} />
-              )}
+              <div className={activeTab === 'chat' ? 'block' : 'hidden'}>
+                <ChatInterface
+                  dataset={dataset}
+                  llmSettings={llmSettings}
+                  onDatasetUpdated={handleDatasetUpdated}
+                  pendingQuestion={pendingQuestion}
+                  onClearPendingQuestion={() => setPendingQuestion(null)}
+                />
+              </div>
 
-              {activeTab === 'overview' && (
+              <div className={activeTab === 'overview' ? 'block' : 'hidden'}>
                 <DatasetOverview
                   dataset={dataset}
                   onSelectQuestion={handleSelectSuggestedQuestion}
+                  onDatasetUpdated={handleDatasetUpdated}
                 />
-              )}
+              </div>
 
-              {activeTab === 'table' && (
+              <div className={activeTab === 'table' ? 'block' : 'hidden'}>
                 <DataTable
                   data={dataset.preview_rows}
                   columns={dataset.columns}
-                  title={`Preview (${dataset.filename})`}
+                  title={`Working Dataset Preview (${dataset.filename})`}
                 />
-              )}
+              </div>
             </div>
           </div>
         )}

@@ -3,9 +3,9 @@ import shutil
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 
-from fastapi import FastAPI, UploadFile, File, HTTPException, Query, Body
+from fastapi import FastAPI, UploadFile, File, HTTPException, Query, Body, Response
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, PlainTextResponse
 
 from .config import UPLOAD_DIR, DEFAULT_PROVIDER, OLLAMA_BASE_URL, DEFAULT_OLLAMA_MODEL
 from .database import db_manager
@@ -22,7 +22,7 @@ from .models import (
 
 app = FastAPI(
     title="CSV Analysis Agent API",
-    description="DuckDB-powered Text-to-SQL Agentic CSV Analysis Engine",
+    description="DuckDB-powered Text-to-SQL Agentic CSV Analysis and Feature Engineering Engine",
     version="1.0.0",
 )
 
@@ -135,7 +135,7 @@ def get_dataset(dataset_id: str):
 
 @app.post("/api/query", response_model=QueryResponse)
 async def query_dataset(request: QueryRequest):
-    """Run an agentic natural language question against the dataset."""
+    """Run an agentic natural language question or feature engineering transformation against the dataset."""
     dataset = get_or_restore_dataset(request.dataset_id)
     if not dataset:
         raise HTTPException(status_code=404, detail=f"Dataset '{request.dataset_id}' not found in memory or disk. Please re-upload your CSV file.")
@@ -153,9 +153,60 @@ async def query_dataset(request: QueryRequest):
             dataset_id=request.dataset_id,
             question=request.question,
         )
+        if response.dataset_updated and response.updated_dataset:
+            DATASETS_STORE[request.dataset_id] = response.updated_dataset.model_dump()
         return response
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Agent analysis failed: {str(e)}")
+
+@app.post("/api/datasets/{dataset_id}/reset")
+def reset_dataset(dataset_id: str):
+    """Reset the mutable working dataset back to the initial raw copy."""
+    dataset = get_or_restore_dataset(dataset_id)
+    if not dataset:
+        raise HTTPException(status_code=404, detail=f"Dataset '{dataset_id}' not found.")
+
+    try:
+        db_manager.reset_to_original(dataset_id)
+        fresh_profile = DataProfiler.profile_dataset(dataset_id, filename=dataset.get("filename"))
+        DATASETS_STORE[dataset_id] = fresh_profile
+        return fresh_profile
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to reset dataset: {str(e)}")
+
+@app.get("/api/datasets/{dataset_id}/export")
+def export_dataset(dataset_id: str, format: str = Query("csv", regex="^(csv|json)$")):
+    """Export the active modified working dataset as downloadable CSV or JSON."""
+    dataset = get_or_restore_dataset(dataset_id)
+    if not dataset:
+        raise HTTPException(status_code=404, detail=f"Dataset '{dataset_id}' not found.")
+
+    meta = db_manager.get_table_meta(dataset_id)
+    if not meta:
+        raise HTTPException(status_code=404, detail=f"Table metadata for '{dataset_id}' not found.")
+
+    table_name = meta["table_name"]
+    base_name = Path(dataset.get("filename", "dataset.csv")).stem
+    df = db_manager.con.sql(f"SELECT * FROM {table_name}").df()
+
+    if format == "json":
+        json_content = df.to_json(orient="records", indent=2)
+        return Response(
+            content=json_content,
+            media_type="application/json",
+            headers={
+                "Content-Disposition": f'attachment; filename="{base_name}_transformed.json"'
+            }
+        )
+    else:
+        csv_content = df.to_csv(index=False)
+        return Response(
+            content=csv_content,
+            media_type="text/csv",
+            headers={
+                "Content-Disposition": f'attachment; filename="{base_name}_transformed.csv"'
+            }
+        )
 
 @app.post("/api/sql")
 def execute_custom_sql(request: CustomSQLRequest):
@@ -163,7 +214,6 @@ def execute_custom_sql(request: CustomSQLRequest):
     dataset = get_or_restore_dataset(request.dataset_id)
     if not dataset:
         raise HTTPException(status_code=404, detail=f"Dataset '{request.dataset_id}' not found.")
-    meta = db_manager.get_table_meta(request.dataset_id)
 
     try:
         results, columns, duration_ms = db_manager.execute_query(request.sql_query)
