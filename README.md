@@ -60,8 +60,8 @@ Ai_system/
 ### 1. Launch Ollama (Local Model)
 Make sure Ollama is installed and running on your machine:
 ```bash
-# Pull and start your preferred model (e.g., llama3 or qwen2.5)
-ollama run llama3
+# Pull and start your preferred model (e.g., qwen2.5-coder:0.5b)
+ollama run qwen2.5-coder:0.5b
 ```
 
 ### 2. Run the Application

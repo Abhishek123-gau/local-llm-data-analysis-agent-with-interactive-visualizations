@@ -182,7 +182,7 @@ def reset_dataset(dataset_id: str):
         raise HTTPException(status_code=500, detail=f"Failed to reset dataset: {str(e)}")
 
 @app.get("/api/datasets/{dataset_id}/export")
-def export_dataset(dataset_id: str, format: str = Query("csv", regex="^(csv|json)$")):
+def export_dataset(dataset_id: str, format: str = Query("csv", pattern="^(csv|json)$")):
     """Export the active modified working dataset as downloadable CSV or JSON."""
     dataset = get_or_restore_dataset(dataset_id)
     if not dataset:

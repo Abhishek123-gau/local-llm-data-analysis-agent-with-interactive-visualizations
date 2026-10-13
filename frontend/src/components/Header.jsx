@@ -137,7 +137,7 @@ export default function Header({ activeDataset, llmHealth, onOpenSettings, onRef
             {llmHealth?.provider || 'Ollama'}
           </span>
           <span className="text-slate-400 font-mono text-[11px]">
-            {llmHealth?.active_model || 'llama3'}
+            {llmHealth?.active_model || 'qwen2.5-coder:0.5b'}
           </span>
         </div>
 

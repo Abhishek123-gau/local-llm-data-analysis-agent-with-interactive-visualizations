@@ -11,7 +11,7 @@ UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 # Default LLM settings
 DEFAULT_PROVIDER = os.getenv("LLM_PROVIDER", "ollama")
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
-DEFAULT_OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5-coder:7b")
+DEFAULT_OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5-coder:0.5b")
 
 # Fallback/alternative provider keys
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")

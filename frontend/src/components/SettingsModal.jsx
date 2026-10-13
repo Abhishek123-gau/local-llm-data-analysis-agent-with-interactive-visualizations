@@ -6,7 +6,7 @@ export default function SettingsModal({ isOpen, onClose, settings, onSaveSetting
   if (!isOpen) return null;
 
   const [provider, setProvider] = useState(settings.provider || 'ollama');
-  const [modelName, setModelName] = useState(settings.modelName || 'llama3');
+  const [modelName, setModelName] = useState(settings.modelName || 'qwen2.5-coder:0.5b');
   const [ollamaUrl, setOllamaUrl] = useState(settings.ollamaUrl || 'http://127.0.0.1:11434');
   const [apiKey, setApiKey] = useState(settings.apiKey || '');
   const [testing, setTesting] = useState(false);
@@ -66,7 +66,7 @@ export default function SettingsModal({ isOpen, onClose, settings, onSaveSetting
                   type="button"
                   onClick={() => {
                     setProvider(p);
-                    if (p === 'ollama' && !modelName) setModelName('llama3');
+                    if (p === 'ollama' && !modelName) setModelName('qwen2.5-coder:0.5b');
                     if (p === 'openai' && !modelName) setModelName('gpt-4o-mini');
                     if (p === 'gemini' && !modelName) setModelName('gemini-1.5-flash');
                     if (p === 'groq' && !modelName) setModelName('llama-3.1-70b-versatile');
@@ -94,7 +94,7 @@ export default function SettingsModal({ isOpen, onClose, settings, onSaveSetting
 
             {provider === 'ollama' && (
               <div className="flex flex-wrap gap-1.5 mb-2">
-                {['qwen2.5-coder:7b', 'qwen2.5:7b', 'deepseek-coder:6.7b'].map((m) => (
+                {['qwen2.5-coder:0.5b', 'qwen2.5-coder:7b', 'qwen2.5:7b', 'deepseek-coder:6.7b'].map((m) => (
                   <button
                     key={m}
                     type="button"
@@ -113,7 +113,7 @@ export default function SettingsModal({ isOpen, onClose, settings, onSaveSetting
 
             <input
               type="text"
-              placeholder={provider === 'ollama' ? 'qwen2.5-coder:7b, deepseek-coder:6.7b' : 'gpt-4o-mini, gemini-1.5-flash'}
+              placeholder={provider === 'ollama' ? 'qwen2.5-coder:0.5b, qwen2.5-coder:7b' : 'gpt-4o-mini, gemini-1.5-flash'}
               value={modelName}
               onChange={(e) => setModelName(e.target.value)}
               className="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-200 focus:outline-none focus:border-indigo-500 font-mono"

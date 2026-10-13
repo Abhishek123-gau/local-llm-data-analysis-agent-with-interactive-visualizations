@@ -29,11 +29,18 @@ export default function App() {
   const [llmSettings, setLlmSettings] = useState(() => {
     const saved = localStorage.getItem('csv_agent_settings');
     if (saved) {
-      try { return JSON.parse(saved); } catch (e) {}
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.modelName === 'qwen2.5-coder:7b' || parsed.modelName === 'llama3') {
+          parsed.modelName = 'qwen2.5-coder:0.5b';
+          localStorage.setItem('csv_agent_settings', JSON.stringify(parsed));
+        }
+        return parsed;
+      } catch (e) {}
     }
     return {
       provider: 'ollama',
-      modelName: 'qwen2.5-coder:7b',
+      modelName: 'qwen2.5-coder:0.5b',
       ollamaUrl: 'http://127.0.0.1:11434',
       apiKey: '',
     };

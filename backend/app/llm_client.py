@@ -41,7 +41,7 @@ class LLMClient:
             self.model_name = model_name or GROQ_MODEL
             self.api_key = self.api_key or GROQ_API_KEY
         else:
-            self.model_name = model_name or "llama3"
+            self.model_name = model_name or DEFAULT_OLLAMA_MODEL
 
     async def check_health(self) -> Dict[str, Any]:
         """Check connection to the chosen provider."""
